@@ -160,4 +160,4 @@ cython_debug/
 #.idea/
 
 # Jylee Custom
-pred_book/open # 23.04.25
+pred_book/open/ # 23.04.25
