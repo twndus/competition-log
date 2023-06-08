@@ -14,7 +14,7 @@ def submission(pred_array, submission_df, modelname, desc='none', dest_dir='resu
     while os.path.exists(filename):
         i += 1
         filename = f'{modelname}-{desc}-{now}-{i}.csv'
-    submission_df.to_csv(filename, index=False)
+    submission_df.to_csv(os.path.join(dest_dir, filename), index=False)
 
 if __name__ == '__main__':
     pred_array = np.random.normal(0, 1, 418)

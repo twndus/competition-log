@@ -4,7 +4,8 @@ import numpy as np
 
 from submission import submission
 from preprocess import Preprocessor
-from data import data_loader
+from data import data_loader, kfold_split
+from models import get_classifier
 
 def main(**kwargs):
     # load train, test data
@@ -29,7 +30,18 @@ def main(**kwargs):
     # print("test_X.columns: ", test_X.columns)
 
     # split data with CV
-    # train
+    data_splited = kfold_split(
+        train_X, train_y, kwargs['dataname'], n_splits=5)
+    
+    # model
+    model = get_classifier('knn')
+    print(model)
+
+    # # train
+    # model = model.fit(
+    #     data_splited['1th']['train_X'], 
+    #     data_splited['1th']['train_y']
+    #     )
     # evaluate
     # predict
     
@@ -44,5 +56,10 @@ if __name__ == '__main__':
     test_path = os.path.join(data_dir, 'test.csv')
     submission_path = os.path.join(data_dir, 'gender_submission.csv')
     modelname = 'none'
+    dataname = 'titanic'
 
-    main(train_path=train_path, test_path=test_path, submission_path=submission_path, modelname=modelname)
+    main(
+        train_path=train_path, test_path=test_path, 
+        submission_path=submission_path, modelname=modelname, 
+        dataname=dataname,
+    )
