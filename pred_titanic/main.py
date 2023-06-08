@@ -33,33 +33,37 @@ def main(**kwargs):
     model = get_classifier(kwargs['modelname'])
 
     # optuma 여기서 구현해야 할 듯 X, y 어떻게 넣을지 생각해보자
-    optimize(
+    best_params = optimize(
+        data_splited['1th']['X_train'], 
+        data_splited['1th']['y_train']
+    )
+    del best_params['classifier']
+
+    # model
+    model = get_classifier(kwargs['modelname'], **best_params)
+    
+    # train
+    model = model.fit(
         data_splited['1th']['X_train'], 
         data_splited['1th']['y_train']
     )
     
-#    # train
-#    model = model.fit(
-#        data_splited['1th']['X_train'], 
-#        data_splited['1th']['y_train']
-#        )
-#    
-#    # evaluate
-#    train_pred = model.predict(data_splited['1th']['X_train'])
-#    val_pred = model.predict(data_splited['1th']['X_val'])
-#    
-#    evaluate(data_splited['1th']['y_train'], train_pred, 
-#             metric='accuracy', desc='train')
-#    evaluate(data_splited['1th']['y_val'], val_pred, 
-#             metric='accuracy', desc='val')
-#    
-#    # pred
-#    test_pred = model.predict(test_X)
-#    
-#    # submission
-#    submission_df = data_loader(kwargs['submission_path'], format='csv')
-#    submission(test_pred, submission_df, kwargs['modelname'])
-#
+    # evaluate
+    train_pred = model.predict(data_splited['1th']['X_train'])
+    val_pred = model.predict(data_splited['1th']['X_val'])
+    
+    evaluate(data_splited['1th']['y_train'], train_pred, 
+             metric='accuracy', desc='train')
+    evaluate(data_splited['1th']['y_val'], val_pred, 
+             metric='accuracy', desc='val')
+    
+    # pred
+    test_pred = model.predict(test_X)
+    
+    # submission
+    submission_df = data_loader(kwargs['submission_path'], format='csv')
+    submission(test_pred, submission_df, kwargs['modelname'])
+
 
 if __name__ == '__main__':
     # args

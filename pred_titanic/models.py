@@ -24,16 +24,19 @@ params = {
     }
 }
 
-def get_classifier(name='knn'):
+def get_classifier(name='knn', **args):
     if name == 'knn':
-        model = KNeighborsClassifier()
+        if len(args.keys()):
+            model = KNeighborsClassifier(**args)
+        else:
+            model = KNeighborsClassifier()
     return model
 
 
 def objective1(trial, train_X, train_y):
     classifier_name = trial.suggest_categorical('classifier', ['knn'])
     if classifier_name == 'knn':
-        knn_n = trial.suggest_int('knn_n', 3, 9)
+        knn_n = trial.suggest_int('n_neighbors', 3, 7)
         classifier_obj = KNeighborsClassifier()
     
     score = cross_val_score(
@@ -45,5 +48,4 @@ def optimize(train_X, train_y):
     study = optuna.create_study(direction='maximize')
     objective = partial(objective1, train_X=train_X, train_y=train_y)
     study.optimize(objective, n_trials=100)
-    print(study.best_trial)
-
+    return study.best_params
