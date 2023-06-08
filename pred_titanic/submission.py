@@ -4,8 +4,9 @@ from datetime import datetime as dt
 import numpy as np
 import pandas as pd
 
-def submission(pred_array, columns, modelname, desc='none', dest_dir='results/'):
-    df = pd.DataFrame(pred_array, columns=columns)
+def submission(pred_array, submission_df, modelname, desc='none', dest_dir='results/'):
+    submission_df.iloc[:, 1] = pred_array
+
     now = dt.strftime(dt.now(), '%y-%m-%d')
     filename = f'{modelname}-{desc}-{now}.csv'
 
@@ -13,10 +14,11 @@ def submission(pred_array, columns, modelname, desc='none', dest_dir='results/')
     while os.path.exists(filename):
         i += 1
         filename = f'{modelname}-{desc}-{now}-{i}.csv'
-    df.to_csv(filename, index=False)
+    submission_df.to_csv(filename, index=False)
 
 if __name__ == '__main__':
-    pred_array = np.array([[1, 0.63], [10, 0.3]])
-    columns = ['PassengerId', 'Survived']
+    pred_array = np.random.normal(0, 1, 418)
+    submission_path = '../../../datasets/kaggle/titanic/gender_submission.csv'
+    submission_df = pd.read_csv(submission_path)
     modelname = 'none'
-    submission(pred_array, columns, modelname)
+    submission(pred_array, submission_df, modelname)
