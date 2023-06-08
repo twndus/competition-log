@@ -6,6 +6,9 @@ from submission import submission
 from preprocess import Preprocessor
 from data import data_loader, kfold_split
 from models import get_classifier
+from evaluate import evaluate
+
+from sklearn.metrics import accuracy_score
 
 def main(**kwargs):
     # load train, test data
@@ -16,46 +19,51 @@ def main(**kwargs):
     train_X = train_df.drop(columns=['PassengerId', 'Survived'])
     train_y = train_df[['Survived']]
     test_X = test_df.drop(columns=['PassengerId'])
-    
-    # print("train_X.columns: ", train_X.columns)
-    # print("train_y.columns: ", train_y.columns)
-    # print("test_X.columns: ", test_X.columns)
 
     # preprocess fit, transform
     preprocessor = Preprocessor(train_X)
     train_X = preprocessor.transform(train_X)
     test_X = preprocessor.transform(test_X)
 
-    # print("train_X.columns: ", train_X.columns)
-    # print("test_X.columns: ", test_X.columns)
-
     # split data with CV
     data_splited = kfold_split(
         train_X, train_y, kwargs['dataname'], n_splits=5)
     
     # model
-    model = get_classifier('knn')
+    model = get_classifier(kwargs['modelname'])
     print(model)
 
-    # # train
-    # model = model.fit(
-    #     data_splited['1th']['train_X'], 
-    #     data_splited['1th']['train_y']
-    #     )
+    # train
+    model = model.fit(
+        data_splited['1th']['X_train'], 
+        data_splited['1th']['y_train']
+        )
+    
     # evaluate
-    # predict
+
+    train_pred = model.predict(data_splited['1th']['X_train'])
+    val_pred = model.predict(data_splited['1th']['X_val'])
+    
+    evaluate(data_splited['1th']['y_train'], train_pred, 
+             metric='accuracy', desc='train')
+    evaluate(data_splited['1th']['y_val'], val_pred, 
+             metric='accuracy', desc='val')
+    
+    # pred
+    test_pred = model.predict(test_X)
     
     # submission
     submission_df = data_loader(kwargs['submission_path'], format='csv')
-    pred_array = np.random.normal(0, 1, 418)
-    submission(pred_array, submission_df, modelname)
+    submission(test_pred, submission_df, kwargs['modelname'])
+
 
 if __name__ == '__main__':
+    # args
     data_dir = '../../../datasets/kaggle/titanic'
     train_path = os.path.join(data_dir, 'train.csv')
     test_path = os.path.join(data_dir, 'test.csv')
     submission_path = os.path.join(data_dir, 'gender_submission.csv')
-    modelname = 'none'
+    modelname = 'knn'
     dataname = 'titanic'
 
     main(

@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.impute import KNNImputer
 
 class Preprocessor():
     '''only X data will be preprocessed with this class'''
@@ -18,10 +19,22 @@ class Preprocessor():
         # onehot encoding
         self.ohe = OneHotEncoder(handle_unknown='ignore')
         self.ohe = self.ohe.fit(self.df_train[self.onehot_cols])
+        encoded_df = pd.DataFrame(
+            self.ohe.transform(
+            self.df_train[self.onehot_cols]).toarray(),
+            columns=self.ohe.get_feature_names_out())
 
+        df = pd.concat([self.df_train, encoded_df], axis=1)
+        df = df.drop(columns=self.cat_cols)
+        
         # numeric scaling
         self.scaler = StandardScaler()
-        self.scaler = self.scaler.fit(self.df_train[self.num_cols])
+        self.scaler = self.scaler.fit(df[self.num_cols])
+
+        # nan imputate
+        self.imputer = KNNImputer()
+        self.imputer = self.imputer.fit(df)
+
 
     def transform(self, df):
         # onehot encoding 
@@ -34,6 +47,9 @@ class Preprocessor():
 
         # numeric scaling
         df[self.num_cols] = self.scaler.transform(df[self.num_cols])
+
+        # nan imputate
+        df = pd.DataFrame(self.imputer.transform(df), columns=df.columns)
 
         return df
 

@@ -25,7 +25,7 @@ params = {
 
 def get_classifier(name='knn'):
     if name == 'knn':
-        model = KNeighborsClassifier(params['knn'])
+        model = KNeighborsClassifier()
     return model
 
 ## optuma 
