@@ -5,7 +5,7 @@ import numpy as np
 from submission import submission
 from preprocess import Preprocessor
 from data import data_loader, kfold_split
-from models import get_classifier, optimize
+from models import get_classifier, optimize, retrain
 from evaluate import evaluate
 
 from sklearn.metrics import accuracy_score
@@ -29,37 +29,24 @@ def main(**kwargs):
     data_splited = kfold_split(
         train_X, train_y, kwargs['dataname'], n_splits=5)
     
-    # model
-    model = get_classifier(kwargs['modelname'])
-
-    # optuma 여기서 구현해야 할 듯 X, y 어떻게 넣을지 생각해보자
+    # get best parameters with optuna
     best_params = optimize(
-        data_splited['1th']['X_train'], 
-        data_splited['1th']['y_train']
+        kwargs['modelname'],
+        train_X, train_y
     )
-    del best_params['classifier']
 
-    # model
-    model = get_classifier(kwargs['modelname'], **best_params)
-    
-    # train
-    model = model.fit(
-        data_splited['1th']['X_train'], 
-        data_splited['1th']['y_train']
+    # retrain and get preds
+    pred_array = retrain(
+        kwargs['modelname'],
+        best_params,
+        data_splited,
+        test_X
     )
-    
-    # evaluate
-    train_pred = model.predict(data_splited['1th']['X_train'])
-    val_pred = model.predict(data_splited['1th']['X_val'])
-    
-    evaluate(data_splited['1th']['y_train'], train_pred, 
-             metric='accuracy', desc='train')
-    evaluate(data_splited['1th']['y_val'], val_pred, 
-             metric='accuracy', desc='val')
-    
-    # pred
-    test_pred = model.predict(test_X)
-    
+
+    # voting
+    test_pred = np.apply_along_axis(
+            lambda x: np.argmax(np.bincount(x)), axis=0, arr=pred_array)
+
     # submission
     submission_df = data_loader(kwargs['submission_path'], format='csv')
     submission(test_pred, submission_df, kwargs['modelname'])

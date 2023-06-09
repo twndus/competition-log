@@ -11,7 +11,7 @@ def submission(pred_array, submission_df, modelname, desc='none', dest_dir='resu
     filename = f'{modelname}-{desc}-{now}.csv'
 
     i = 0
-    while os.path.exists(filename):
+    while os.path.exists(os.path.join(dest_dir, filename)):
         i += 1
         filename = f'{modelname}-{desc}-{now}-{i}.csv'
     submission_df.to_csv(os.path.join(dest_dir, filename), index=False)
