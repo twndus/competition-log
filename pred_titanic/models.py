@@ -1,6 +1,6 @@
 '''
 Classification
-- ( ) logistic regression
+- (+) logistic regression
 - (+) knn (ml)
 - ( ) svc
 - ( ) decision tree
@@ -17,37 +17,31 @@ from functools import partial
 import numpy as np
 
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import cross_val_score
 import optuna
 
 from evaluate import evaluate
 
-## params
-params = {
-    'knn': {
-        'n_neghbors': 5,
-    }
-}
-
 def get_classifier(name='knn', **args):
     if name == 'knn':
-        if len(args.keys()):
-            model = KNeighborsClassifier(**args)
-        else:
-            model = KNeighborsClassifier()
+        model = KNeighborsClassifier(**args)
+    elif name == 'logistic':
+        model = LogisticRegression()
     return model
 
 
 def classification_objective(trial, modelname, train_X, train_y):
     classifier_name = trial.suggest_categorical('classifier', ['knn'])
     if modelname == 'knn':
-        knn_n = trial.suggest_int('n_neighbors', 3, 7)
-        classifier_obj = KNeighborsClassifier()
-    
-    classifier_obj = KNeighborsClassifier()
-    
+        arg_n = trial.suggest_categorical('n_neighbors', [3, 5, 7])
+        model = KNeighborsClassifier()
+    elif modelname == 'logistic':
+        arg_p = trial.suggest_categorical('penalty', ['l1', 'l2', 'elasticnet'])
+        arg_tol = trial.suggest_float('tol', 1e-5, 1e-2)
+        model = LogisticRegression()
     score = cross_val_score(
-            classifier_obj, train_X, train_y, n_jobs=-1, cv=3)
+            model, train_X, train_y, n_jobs=-1, cv=3)
     accuracy = score.mean()
     return accuracy
 
