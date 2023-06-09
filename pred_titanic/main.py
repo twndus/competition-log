@@ -58,7 +58,7 @@ if __name__ == '__main__':
     train_path = os.path.join(data_dir, 'train.csv')
     test_path = os.path.join(data_dir, 'test.csv')
     submission_path = os.path.join(data_dir, 'gender_submission.csv')
-    modelname = 'logistic' #'knn'
+    modelname = 'ada'#'rf' #'svc' #'logistic' #'knn'
     dataname = 'titanic'
 
     main(
