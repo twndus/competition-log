@@ -2,9 +2,11 @@
 Classification
 - (+) logistic regression
 - (+) knn (ml)
-- ( ) svc
+- (+) svc
+- (+) adaboost 
+- (+) random forest 
 - ( ) decision tree
-- ( ) mlp
+- (+) mlp
 
 Regression
 - ( ) linear regression
@@ -19,6 +21,8 @@ import numpy as np
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
+from sklearn.neural_network import MLPClassifier
+from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.svm import SVC
 
 from sklearn.model_selection import cross_val_score
@@ -37,7 +41,11 @@ def get_classifier(name='knn', **args):
         model = RandomForestClassifier(**args)
     elif name == 'ada':
         model = AdaBoostClassifier(**args)
-        
+    elif name == 'mlp':
+        model = MLPClassifier(warm_start=True, **args)
+    elif name == 'gbm':
+        model = GradientBoostingClassifier(warm_start=True, **args)
+
     return model
 
 
@@ -65,9 +73,28 @@ def classification_objective(trial, modelname, train_X, train_y):
         arg_lr = trial.suggest_float('learning_rate', 0.0001, 1, log=True)
         arg_algorithms = trial.suggest_categorical('algorithm', ['SAMME', 'SAMME.R'])
         model = AdaBoostClassifier()
+    elif modelname == 'mlp':
+        arg_loss = trial.suggest_categorical('loss', ['log_loss', 'deviance', 'exponential'])
+        arg_lrinit = trial.suggest_float('learning_rate_init', 0.0001, 1, log=True)
+        arg_lr = trial.suggest_categorical('learning_rate', ['constant', 'invscaling', 'adaptive'])
+        arg_alpha = trial.suggest_float('alpha', 0.0001, 1, log=True)
+        arg_activation = trial.suggest_categorical('activation', ['logistic', 'relu', 'tanh'])
+        arg_solver = trial.suggest_categorical('solver', ['lbfgs', 'sgd', 'adam'])
+        arg_batchsize = trial.suggest_int('batch_size', 1, 1000, log=True)
+        arg_hidden_layer_sizes = trial.suggest_int('hidden_layer_sizes', 1, 1000)
+        arg_maxiter = trial.suggest_int('max_iter', 100, 1000)
+        model = MLPClassifier(warm_start=True)
+    elif modelname == 'gbm':
+        arg_estimators = trial.suggest_int('n_estimators', 100, 1000, step=100)
+        arg_lr = trial.suggest_float('learning_rate', 0.0001, 1, log=True)
+        arg_mdepth = trial.suggest_int('max_depth', 80, 110, step=10)
+        arg_features = trial.suggest_categorical('max_features', ['auto', 'sqrt', 'log2', None])
+        model = GradientBoostingClassifier(warm_start=True)
+    
     score = cross_val_score(
             model, train_X, train_y, n_jobs=-1, cv=5)
     accuracy = score.mean()
+
     return accuracy
 
 def retrain(modelname, best_params, data_splited, test_X):
