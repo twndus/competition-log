@@ -2,11 +2,11 @@ import os
 
 import numpy as np
 
-from submission import submission
 from preprocess import Preprocessor
 from data import data_loader, kfold_split
 from models import get_classifier, optimize, retrain
 from evaluate import evaluate
+from submission import submission
 
 from sklearn.metrics import accuracy_score
 
@@ -58,7 +58,7 @@ if __name__ == '__main__':
     train_path = os.path.join(data_dir, 'train.csv')
     test_path = os.path.join(data_dir, 'test.csv')
     submission_path = os.path.join(data_dir, 'gender_submission.csv')
-    modelname = 'knn'
+    modelname = 'gbm'#'mlp' #'rf' #'svc' #'logistic' #'knn'
     dataname = 'titanic'
 
     main(

@@ -48,6 +48,10 @@ class Preprocessor():
         # numeric scaling
         df[self.num_cols] = self.scaler.transform(df[self.num_cols])
 
+        # custom log transformation
+        # for colname in ['SibSp', 'Parch', 'Fare']:
+        df[['SibSp', 'Parch', 'Fare']] = df[['SibSp', 'Parch', 'Fare']].apply(lambda x: np.log1p(x))
+
         # nan imputate
         df = pd.DataFrame(self.imputer.transform(df), columns=df.columns)
 
