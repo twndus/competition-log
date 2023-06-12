@@ -5,7 +5,6 @@ Classification
 - (+) svc
 - (+) adaboost 
 - (+) random forest 
-- ( ) decision tree
 - (+) mlp
 
 Regression
@@ -27,6 +26,7 @@ from sklearn.svm import SVC
 
 from sklearn.model_selection import cross_val_score
 import optuna
+import tensorflow as tf
 
 from evaluate import evaluate
 
@@ -130,3 +130,20 @@ def optimize(modelname, train_X, train_y):
     )
     study.optimize(objective, n_trials=100)
     return study.best_params
+
+def mlpclassifier_keras(input_shape, learning_rate):
+
+    # build model
+    input_layer = tf.keras.layers.Input(shape=input_shape)
+    x = tf.keras.layers.Dense(units=100, activation='relu')(input_layer)
+    x = tf.keras.layers.Dropout(0.5)(x)
+    x = tf.keras.layers.Dense(units=1, activation='sigmoid')(x)
+    model = tf.keras.Model(input_layer, x)
+
+    # optimizer
+    adam = tf.keras.optimizers.Adam(learning_rate=learning_rate)
+
+    # compile model
+    model.compile(optimizer=adam, loss='binary_crossentropy', metrics=['acc'])
+
+    return model
