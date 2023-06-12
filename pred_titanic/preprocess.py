@@ -26,6 +26,17 @@ class Preprocessor():
 
         df = pd.concat([self.df_train, encoded_df], axis=1)
         df = df.drop(columns=self.cat_cols)
+
+        #Creating new family_size column
+        df['Family_Size']=df['SibSp']+df['Parch']
+        df['Age*Class']=df['Age']*df['Pclass']
+        df['Fare_Per_Person']=df['Fare']/(df['Family_Size']+1)
+        self.num_cols += ['Family_Size', 'Age*Class', 'Fare_Per_Person']
+        
+        # custom log transformation
+        for colname in ['SibSp', 'Parch', 'Fare']:
+            df[['SibSp', 'Parch', 'Fare']] = \
+                    df[['SibSp', 'Parch', 'Fare']].apply(lambda x: np.log1p(x))
         
         # numeric scaling
         self.scaler = StandardScaler()
@@ -45,12 +56,18 @@ class Preprocessor():
         df = pd.concat([df, encoded_df], axis=1)
         df.drop(columns=self.cat_cols, inplace=True)
 
+        #Creating new family_size column
+        df['Family_Size']=df['SibSp']+df['Parch']
+        df['Age*Class']=df['Age']*df['Pclass']
+        df['Fare_Per_Person']=df['Fare']/(df['Family_Size']+1)
+        
+        # custom log transformation
+        for colname in ['SibSp', 'Parch', 'Fare']:
+            df[['SibSp', 'Parch', 'Fare']] = \
+                    df[['SibSp', 'Parch', 'Fare']].apply(lambda x: np.log1p(x))
+
         # numeric scaling
         df[self.num_cols] = self.scaler.transform(df[self.num_cols])
-
-        # custom log transformation
-        # for colname in ['SibSp', 'Parch', 'Fare']:
-        df[['SibSp', 'Parch', 'Fare']] = df[['SibSp', 'Parch', 'Fare']].apply(lambda x: np.log1p(x))
 
         # nan imputate
         df = pd.DataFrame(self.imputer.transform(df), columns=df.columns)

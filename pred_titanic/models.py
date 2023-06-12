@@ -45,6 +45,10 @@ def get_classifier(name='knn', **args):
         model = MLPClassifier(warm_start=True, **args)
     elif name == 'gbm':
         model = GradientBoostingClassifier(warm_start=True, **args)
+    elif modelname == 'mlp_keras':
+        learning_rate = args['learning_rate']
+        model = mlpclassifier_keras(train_X.shape[1:], learning_rate)
+        model.fit(train_X, train_y, epochs=200, batch_size=arg_batchsize)
 
     return model
 
@@ -90,10 +94,19 @@ def classification_objective(trial, modelname, train_X, train_y):
         arg_mdepth = trial.suggest_int('max_depth', 80, 110, step=10)
         arg_features = trial.suggest_categorical('max_features', ['auto', 'sqrt', 'log2', None])
         model = GradientBoostingClassifier(warm_start=True)
-    
-    score = cross_val_score(
-            model, train_X, train_y, n_jobs=-1, cv=5)
-    accuracy = score.mean()
+    elif modelname == 'mlp_keras':
+        arg_lr = trial.suggest_float('learning_rate', 0.0001, 1, log=True)
+        arg_batchsize = trial.suggest_int('batch_size', 1, 1000, log=True)
+        model = mlpclassifier_keras(train_X.shape[1:], arg_lr)
+        model.fit(train_X, train_y, epochs=200, batch_size=arg_batchsize)
+
+    if modelname.endswith('keras'): 
+        accuracy = model.evaluate(train_X, train_y)[-1]
+        
+    else:
+        score = cross_val_score(
+                model, train_X, train_y, n_jobs=-1, cv=5)
+        accuracy = score.mean()
 
     return accuracy
 
@@ -104,21 +117,27 @@ def retrain(modelname, best_params, data_splited, test_X):
     for i in range(len(data_splited.keys())):
         # model
         model = get_classifier(modelname, **best_params)
-        # train
-        model = model.fit(data_splited[f'{i}th']['X_train'], 
-            data_splited[f'{i}th']['y_train'])
-    
-        # evaluate
-        train_pred = model.predict(data_splited[f'{i}th']['X_train'])
-        val_pred = model.predict(data_splited[f'{i}th']['X_val'])
-    
-        evaluate(data_splited[f'{i}th']['y_train'], train_pred, 
-                 metric='accuracy', desc='train')
-        evaluate(data_splited[f'{i}th']['y_val'], val_pred, 
-                 metric='accuracy', desc='val')
+        
+        if modelname.endswith('keras'):
+            train_eval = model.evaluate(train_X, train_y)
+            test_pred = (model.predict(test_X) > 0.5).astype(int)
+        else:
+            # train
+            model = model.fit(data_splited[f'{i}th']['X_train'], 
+                data_splited[f'{i}th']['y_train'])
+        
+            # evaluate
+            train_pred = model.predict(data_splited[f'{i}th']['X_train'])
+            val_pred = model.predict(data_splited[f'{i}th']['X_val'])
+        
+            evaluate(data_splited[f'{i}th']['y_train'], train_pred, 
+                     metric='accuracy', desc='train')
+            evaluate(data_splited[f'{i}th']['y_val'], val_pred, 
+                     metric='accuracy', desc='val')
+            test_pred = model.predict(test_X)
         
         # pred
-        pred_list.append(model.predict(test_X))
+        pred_list.append(test_pred)
 
     return np.array(pred_list)
 
