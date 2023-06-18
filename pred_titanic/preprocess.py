@@ -34,9 +34,8 @@ class Preprocessor():
         self.num_cols += ['Family_Size', 'Age*Class', 'Fare_Per_Person']
         
         # custom log transformation
-        for colname in ['SibSp', 'Parch', 'Fare']:
-            df[['SibSp', 'Parch', 'Fare']] = \
-                    df[['SibSp', 'Parch', 'Fare']].apply(lambda x: np.log1p(x))
+        for colname in ['SibSp', 'Parch', 'Fare', 'Fare_Per_Person']:
+            df[colname] = df[colname].apply(lambda x: np.log1p(x))
         
         # numeric scaling
         self.scaler = StandardScaler()

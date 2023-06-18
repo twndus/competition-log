@@ -30,7 +30,7 @@ import tensorflow as tf
 
 from evaluate import evaluate
 
-def get_classifier(name='knn', **args):
+def get_classifier(name='knn', input_shape=None, **args):
     if name == 'knn':
         model = KNeighborsClassifier(**args)
     elif name == 'logistic':
@@ -45,10 +45,9 @@ def get_classifier(name='knn', **args):
         model = MLPClassifier(warm_start=True, **args)
     elif name == 'gbm':
         model = GradientBoostingClassifier(warm_start=True, **args)
-    elif modelname == 'mlp_keras':
+    elif name == 'mlp_keras':
         learning_rate = args['learning_rate']
-        model = mlpclassifier_keras(train_X.shape[1:], learning_rate)
-        model.fit(train_X, train_y, epochs=200, batch_size=arg_batchsize)
+        model = mlpclassifier_keras(input_shape, learning_rate)
 
     return model
 
@@ -78,7 +77,6 @@ def classification_objective(trial, modelname, train_X, train_y):
         arg_algorithms = trial.suggest_categorical('algorithm', ['SAMME', 'SAMME.R'])
         model = AdaBoostClassifier()
     elif modelname == 'mlp':
-        arg_loss = trial.suggest_categorical('loss', ['log_loss', 'deviance', 'exponential'])
         arg_lrinit = trial.suggest_float('learning_rate_init', 0.0001, 1, log=True)
         arg_lr = trial.suggest_categorical('learning_rate', ['constant', 'invscaling', 'adaptive'])
         arg_alpha = trial.suggest_float('alpha', 0.0001, 1, log=True)
@@ -89,6 +87,7 @@ def classification_objective(trial, modelname, train_X, train_y):
         arg_maxiter = trial.suggest_int('max_iter', 100, 1000)
         model = MLPClassifier(warm_start=True)
     elif modelname == 'gbm':
+        arg_loss = trial.suggest_categorical('loss', ['log_loss', 'deviance', 'exponential'])
         arg_estimators = trial.suggest_int('n_estimators', 100, 1000, step=100)
         arg_lr = trial.suggest_float('learning_rate', 0.0001, 1, log=True)
         arg_mdepth = trial.suggest_int('max_depth', 80, 110, step=10)
@@ -96,9 +95,13 @@ def classification_objective(trial, modelname, train_X, train_y):
         model = GradientBoostingClassifier(warm_start=True)
     elif modelname == 'mlp_keras':
         arg_lr = trial.suggest_float('learning_rate', 0.0001, 1, log=True)
-        arg_batchsize = trial.suggest_int('batch_size', 1, 1000, log=True)
+#        arg_batchsize = trial.suggest_int('batch_size', 1, 1000, log=True)
+#        arg_epochs = trial.suggest_int('epochs', 100, 200, log=True)
+        epochs = 150
+        batch_size = 20
         model = mlpclassifier_keras(train_X.shape[1:], arg_lr)
-        model.fit(train_X, train_y, epochs=200, batch_size=arg_batchsize)
+        model.fit(train_X, train_y, validation_split=0.2, 
+                batch_size=batch_size, epochs=epochs)
 
     if modelname.endswith('keras'): 
         accuracy = model.evaluate(train_X, train_y)[-1]
@@ -112,16 +115,35 @@ def classification_objective(trial, modelname, train_X, train_y):
 
 def retrain(modelname, best_params, data_splited, test_X):
     pred_list = []
-    del best_params['classifier']
+    train_accs = []
+    
+    if 'classifier' in best_params.keys():
+        del best_params['classifier']
     
     for i in range(len(data_splited.keys())):
-        # model
-        model = get_classifier(modelname, **best_params)
-        
         if modelname.endswith('keras'):
-            train_eval = model.evaluate(train_X, train_y)
+            # learning params
+            epochs = 500#best_params['epochs']
+            batch_size = 20#best_params['batch_size']
+#            del best_params['epochs']
+#            del best_params['batch_size']
+
+            # model
+            model = get_classifier(modelname, input_shape=test_X.shape[1:], **best_params)
+            
+            history = model.fit(
+                data_splited[f'{i}th']['X_train'], 
+                data_splited[f'{i}th']['y_train'], epochs=epochs, 
+                validation_data=(data_splited[f'{i}th']['X_val'], 
+                data_splited[f'{i}th']['y_val']),
+                    batch_size=batch_size)
+            train_eval = model.evaluate(data_splited[f'{i}th']['X_train'], 
+                data_splited[f'{i}th']['y_train'])[1]
             test_pred = (model.predict(test_X) > 0.5).astype(int)
         else:
+            # model
+            model = get_classifier(modelname, **best_params)
+            
             # train
             model = model.fit(data_splited[f'{i}th']['X_train'], 
                 data_splited[f'{i}th']['y_train'])
@@ -130,16 +152,17 @@ def retrain(modelname, best_params, data_splited, test_X):
             train_pred = model.predict(data_splited[f'{i}th']['X_train'])
             val_pred = model.predict(data_splited[f'{i}th']['X_val'])
         
-            evaluate(data_splited[f'{i}th']['y_train'], train_pred, 
+            train_eval = evaluate(data_splited[f'{i}th']['y_train'], train_pred, 
                      metric='accuracy', desc='train')
-            evaluate(data_splited[f'{i}th']['y_val'], val_pred, 
+            _ = evaluate(data_splited[f'{i}th']['y_val'], val_pred, 
                      metric='accuracy', desc='val')
             test_pred = model.predict(test_X)
         
         # pred
         pred_list.append(test_pred)
+        train_accs.append(train_eval)
 
-    return np.array(pred_list)
+    return np.array(pred_list), train_accs
 
 def optimize(modelname, train_X, train_y):
     study = optuna.create_study(direction='maximize')

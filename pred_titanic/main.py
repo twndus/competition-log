@@ -4,7 +4,7 @@ import numpy as np
 
 from preprocess import Preprocessor
 from data import data_loader, kfold_split
-from models import get_classifier, optimize, retrain, mlpclassifier_keras
+from models import get_classifier, optimize, retrain
 from evaluate import evaluate
 from submission import submission
 
@@ -42,14 +42,17 @@ def main(**kwargs):
 #        submission(test_pred, submission_df, kwargs['modelname'], 
 #            train_acc=f'{train_eval[-1]:.4f}')
 #    else:
+
+
     # get best parameters with optuna
     best_params = optimize(
         kwargs['modelname'],
         train_X, train_y
     )
 
+#    best_params = {'learning_rate': 0.001}
     # retrain and get preds
-    pred_array = retrain(
+    pred_array, train_accs = retrain(
         kwargs['modelname'],
         best_params,
         data_splited,
@@ -59,10 +62,12 @@ def main(**kwargs):
     # voting
     test_pred = np.apply_along_axis(
             lambda x: np.argmax(np.bincount(x)), axis=0, arr=pred_array)
+    train_acc = np.mean(train_accs)
 
     # submission
     submission_df = data_loader(kwargs['submission_path'], format='csv')
-    submission(test_pred, submission_df, kwargs['modelname'])
+    submission(test_pred, submission_df, kwargs['modelname'],
+        train_acc=f'{train_acc:.4f}')
 
 
 if __name__ == '__main__':
@@ -71,11 +76,12 @@ if __name__ == '__main__':
     train_path = os.path.join(data_dir, 'train.csv')
     test_path = os.path.join(data_dir, 'test.csv')
     submission_path = os.path.join(data_dir, 'gender_submission.csv')
-    modelname = 'mlp_keras' #'gbm'#'mlp' #'rf' #'svc' #'logistic' #'knn'
+    modelname = 'gbm'#'mlp_keras' #'gbm'#'mlp' #'rf' #'svc' #'logistic' #'knn'
     dataname = 'titanic'
+    epochs = 20
 
     main(
         train_path=train_path, test_path=test_path, 
         submission_path=submission_path, modelname=modelname, 
-        dataname=dataname,
+        dataname=dataname, epochs=epochs,
     )
