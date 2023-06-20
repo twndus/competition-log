@@ -21,6 +21,7 @@ import numpy as np
 
 from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
 from sklearn.linear_model import LogisticRegression
+from sklearn.tree import DecisionTreeRegressor 
 from sklearn.ensemble import (
         RandomForestClassifier, AdaBoostClassifier, AdaBoostRegressor,
         RandomForestRegressor)
@@ -66,7 +67,8 @@ def get_classifier(name='knn', task=None, input_shape=None, **args):
         elif name == 'gbm':
             model = GradientBoostingRegressor(warm_start=True, **args)
         elif name == 'ada':
-            model = AdaBoostRegressor(**args)
+            model = AdaBoostRegressor(DecisionTreeRegressor(), **args)
+#            model = AdaBoostRegressor(**args)
     return model
 
 
@@ -162,7 +164,7 @@ def regression_objective(trial, modelname, train_X, train_y):
         arg_estimators = trial.suggest_int('n_estimators', 100, 1000, step=100)
         arg_lr = trial.suggest_float('learning_rate', 0.0001, 1, log=True)
         arg_loss = trial.suggest_categorical('loss', ['log_loss', 'deviance', 'exponential'])
-        model = AdaBoostRegressor()
+        model = AdaBoostRegressor(DecisionTreeRegressor())
     
     score = cross_val_score(
             model, train_X, train_y, scoring='neg_mean_squared_error', n_jobs=-1, cv=5)

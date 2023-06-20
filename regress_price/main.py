@@ -68,7 +68,7 @@ if __name__ == '__main__':
     test_path = os.path.join(data_dir, 'test.csv')
     submission_path = os.path.join(data_dir, 'sample_submission.csv')
     task = 'regression'
-    modelname = 'gbm'#'mlp_keras' #'gbm'#'mlp' #'rf' #'svc' #'logistic' #'knn'
+    modelname = 'ada'#'mlp_keras' #'gbm'#'mlp' #'rf' #'svc' #'logistic' #'knn'
     dataname = 'house'
     epochs = 20
 

@@ -30,9 +30,9 @@ class Preprocessor():
         df = df.drop(columns=self.cat_cols)
         
         if self.dataname =='titanic':
-            df = self.preprocess_titanic(df, 'fit')#, self.num_cols, self.cat_cols)
+            df = self.preprocess_titanic(df, 'fit')
         elif self.dataname == 'house':
-            df = self.preprocess_house(df, 'fit')#, self.num_cols, self.cat_cols)
+            df = self.preprocess_house(df, 'fit')
         
         # numeric scaling
         self.scaler = StandardScaler()
@@ -52,9 +52,9 @@ class Preprocessor():
         df.drop(columns=self.cat_cols, inplace=True)
         
         if self.dataname =='titanic':
-            df = self.preprocess_titanic(df, 'transform')#, self.num_cols, self.cat_cols)
+            df = self.preprocess_titanic(df, 'transform')
         elif self.dataname == 'house':
-            df = self.preprocess_house(df, 'transform')#, self.num_cols, self.cat_cols)
+            df = self.preprocess_house(df, 'transform')
 
         # numeric scaling
         df[self.num_cols] = self.scaler.transform(df[self.num_cols])
