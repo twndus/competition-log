@@ -213,9 +213,10 @@ class Preprocessor():
         df['deck'] = df['Cabin'].apply(lambda x: x.split('/')[0] if type(x) != float else np.nan)
         df['num'] = df['Cabin'].apply(lambda x: x.split('/')[1] if type(x) != float else np.nan).astype('float')
         df['side'] = df['Cabin'].apply(lambda x: x.split('/')[2] if type(x) != float else np.nan)
+        df['total_amount'] = df[['RoomService', 'FoodCourt', 'ShoppingMall', 'Spa', 'VRDeck']].sum(axis=1)
 
         if step == 'fit':
-            self.num_cols.append('num')
+            self.num_cols.extend(['num', 'total_amount'])
             self.cat_cols.extend(['deck', 'side'])
         elif step == 'transform':
             pass
