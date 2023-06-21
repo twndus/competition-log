@@ -70,7 +70,7 @@ if __name__ == '__main__':
     test_path = os.path.join(data_dir, 'test.csv')
     submission_path = os.path.join(data_dir, 'sample_submission.csv')
     task = 'classification'
-    modelname = 'xgboost'#'mlp_keras' #'gbm'#'mlp' #'rf' #'svc' #'logistic' #'knn'
+    modelname = 'mlp_keras'#'xgboost' #'mlp_keras' #'gbm'#'mlp' #'rf' #'svc' #'logistic' #'knn'
     dataname = 'spaceship'
     epochs = 20
 
