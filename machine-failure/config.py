@@ -1,6 +1,6 @@
 import os
 
-data_dir='/Users/leejuyeon/Downloads/playground-series-s3e17'
+data_dir='/home/jylee/datasets/kaggle/machine-failures'
 # args
 args = {
     'train_path': os.path.join(data_dir, 'train.csv'),

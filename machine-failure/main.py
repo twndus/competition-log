@@ -63,8 +63,7 @@ def main():#**args):
     # submission
     submission_df = data_loader(args['submission_path'], format='csv')
     submission(test_pred, submission_df, args['modelname'],
-        train_metrics=f'{train_metric:.4f}', sub_type='bool')
-
+        train_metrics=f'{train_metric:.4f}')
 
 if __name__ == '__main__':
     main()

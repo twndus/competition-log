@@ -121,9 +121,10 @@ class Preprocessor():
         for col in self.num_cols:
             # Calculate skewness
             skewness = skew(df[col], nan_policy='omit')
-            if skewness >= 1:
+            exceptions = len(df[col].unique()) > 2
+            if (skewness >= 1) and exceptions:
                 pos_skewed.append(col)
-            elif skewness <= -1:
+            elif (skewness <= -1) and exceptions:
                 neg_skewed.append(col)
 
         return pos_skewed, neg_skewed
