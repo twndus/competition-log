@@ -16,6 +16,7 @@ Regression
 - ( ) elasticnet
 - (+) mlp
 - (+) random forest 
+- (+) catboost
 '''
 from functools import partial
 
@@ -29,11 +30,11 @@ from sklearn.ensemble import (
         RandomForestRegressor)
 from sklearn.neural_network import MLPClassifier, MLPRegressor
 from sklearn.ensemble import (
-#    GradientBoostingClassifier, GradientBoostingRegressor,
     HistGradientBoostingClassifier, HistGradientBoostingRegressor,
     )
 from sklearn.svm import SVC
 from xgboost import XGBClassifier
+from catboost import CatBoostClassifier
 
 from sklearn.model_selection import cross_val_score
 import optuna
@@ -65,6 +66,8 @@ def get_classifier(modelname='knn', task=None, input_shape=None, **args):
             model = mlpclassifier_keras(input_shape, learning_rate)
         elif modelname == 'xgboost':
             model = XGBClassifier(**args)
+        elif modelname == 'catboost':
+            model = CatBoostClassifier(**args)
     elif task == 'regression':
         if modelname == 'knn':
             model = KNeighborsRegressor(**args)
@@ -115,37 +118,64 @@ def classification_objective(trial, modelname, train_X, train_y):
         arg_maxiter = trial.suggest_int('max_iter', 100, 1000)
         model = MLPClassifier(warm_start=True)
     elif modelname == 'gbm':
-        arg_loss = trial.suggest_categorical('loss', ['log_loss', 'auto'])
-#        arg_estimators = trial.suggest_int('n_estimators', 100, 1000, step=100)
-        arg_lr = trial.suggest_float('learning_rate', 0.0001, 1, log=True)
-        arg_mdepth = trial.suggest_int('max_depth', 80, 110, step=10)
+        params = {}
+        params['learning_rate'] = trial.suggest_float('learning_rate', 0.0001, 1, log=True)
+        params['max_iter'] = trial.suggest_int('max_iter', 100, 1000, step=100)
+        params['max_depth'] = trial.suggest_int('max_depth', 80, 110, step=10)
+        params['l2_regularization'] = trial.suggest_float('l2_regularization', 0.01, 1, log=True)
 #        arg_features = trial.suggest_categorical('max_features', ['auto', 'sqrt', 'log2', None])
-        model = HistGradientBoostingClassifier(warm_start=True)
+        model = HistGradientBoostingClassifier(warm_start=True, **params)
     elif modelname == 'xgboost':
-        arg_estimators = trial.suggest_int('n_estimators', 100, 500, step=100)
-        arg_mdepth = trial.suggest_int('max_depth', 3, 9, step=2)
+        params = {}
+        params['n_estimators'] = trial.suggest_int('n_estimators', 100, 500, step=100)
+        params['max_depth'] = trial.suggest_int('max_depth', 3, 9, step=2)
         # max_leaves
         # max_bin
         # tree_method
-        arg_min_child_weight = trial.suggest_float("min_child_weight", 1, 6, step=1)
-        arg_lr = trial.suggest_float('learning_rate', 0.0001, 1, log=True)
+        params['min_child_weight'] = trial.suggest_float("min_child_weight", 1, 6, step=1)
+        params['learning_rate'] = trial.suggest_float('learning_rate', 0.0001, 1, log=True)
         # booster
         # n_jobs
-        arg_subsample = trial.suggest_float('subsample', 0.5, 0.9)
-        arg_colsample_bytree = trial.suggest_float('colsample_bytree', 0.5, 0.9)
-        arg_gamma = trial.suggest_int('gamma', 1, 9, log=True)
-        arg_alpha = trial.suggest_float('reg_alpha', 0.00001, 1, log=True)
-        arg_lambda = trial.suggest_float('reg_lambda', 0.00001, 1, log=True)
-        model = XGBClassifier()
+        params['subsample'] = trial.suggest_float('subsample', 0.5, 0.9)
+        params['colsample_bytree'] = trial.suggest_float('colsample_bytree', 0.5, 0.9)
+        params['gamma'] = trial.suggest_int('gamma', 1, 9, log=True)
+        params['reg_alpha'] = trial.suggest_float('reg_alpha', 0.00001, 1, log=True)
+        params['reg_lambda'] = trial.suggest_float('reg_lambda', 0.00001, 1, log=True)
+        model = XGBClassifier(**params)
     elif modelname == 'mlp_keras':
         arg_lr = trial.suggest_float('learning_rate', 0.0001, 1, log=True)
-#        arg_batchsize = trial.suggest_int('batch_size', 1, 1000, log=True)
-#        arg_epochs = trial.suggest_int('epochs', 100, 200, log=True)
         epochs = 150
         batch_size = 20
         model = mlpclassifier_keras(train_X.shape[1:], arg_lr)
         model.fit(train_X, train_y, validation_split=0.2, 
                 batch_size=batch_size, epochs=epochs)
+    elif modelname == 'catboost':
+        # params = {}
+        # params['iterations']=trial.suggest_int("iterations", 100, 1000)
+        # params['learning_rate']=trial.suggest_float("learning_rate", 1e-5, 1e-1, log=True)
+        # params['depth']=trial.suggest_int("depth", 4, 10)
+        # params['l2_leaf_reg']=trial.suggest_float("l2_leaf_reg", 1e-8, 100.0, log=True)
+        # params['bootstrap_type']=trial.suggest_categorical("bootstrap_type", ["Bayesian"])
+        # params['random_strength']=trial.suggest_float("random_strength", 1e-8, 10.0, log=True)
+        # params['bagging_temperature']=trial.suggest_float("bagging_temperature", 0.0, 10.0)
+        # params['od_type']=trial.suggest_categorical("od_type", ["IncToDec", "Iter"])
+        # params['od_wait']=trial.suggest_int("od_wait", 10, 50)
+        # params['verbose']=False 
+        # params['min_child_samples'] = trial.suggest_categorical('min_child_samples', [1, 4, 8, 16, 32])
+        params = {
+            'iterations':trial.suggest_int("iterations", 1000, 20000),
+            'od_wait':trial.suggest_int('od_wait', 500, 2300),
+            'learning_rate' : trial.suggest_uniform('learning_rate',0.01, 1),
+            'reg_lambda': trial.suggest_uniform('reg_lambda',1e-5,100),
+            'subsample': trial.suggest_uniform('subsample',0,1),
+            'random_strength': trial.suggest_uniform('random_strength',10,50),
+            'depth': trial.suggest_int('depth',1, 15),
+            'min_data_in_leaf': trial.suggest_int('min_data_in_leaf',1,30),
+            'leaf_estimation_iterations': trial.suggest_int('leaf_estimation_iterations',1,15),
+            'bagging_temperature' :trial.suggest_loguniform('bagging_temperature', 0.01, 100.00),
+            'colsample_bylevel':trial.suggest_float('colsample_bylevel', 0.4, 1.0),
+        }
+        model = CatBoostClassifier(**params)
 
     if modelname.endswith('keras'): 
         accuracy = model.evaluate(train_X, train_y)[-1]
@@ -179,10 +209,8 @@ def regression_objective(trial, modelname, train_X, train_y):
     elif modelname == 'gbm':
         arg_loss = trial.suggest_categorical('loss', ['squared_error', 'absolute_error', 
             'huber', 'quantile'])
-#        arg_estimators = trial.suggest_int('n_estimators', 100, 1000, step=100)
         arg_lr = trial.suggest_float('learning_rate', 0.0001, 1, log=True)
         arg_mdepth = trial.suggest_int('max_depth', 80, 110, step=10)
-#        arg_features = trial.suggest_categorical('max_features', ['auto', 'sqrt', 'log2', None])
         model = HistGradientBoostingRegressor(warm_start=True)
     elif modelname == 'ada':
         arg_estimators = trial.suggest_int('n_estimators', 100, 1000, step=100)
@@ -259,7 +287,7 @@ def optimize(modelname, task, train_X, train_y):
             regression_objective, modelname=modelname, 
             train_X=train_X, train_y=train_y
         )
-    study.optimize(objective, n_trials=100)
+    study.optimize(objective, n_trials=10)
     return study.best_params
 
 def mlpclassifier_keras(input_shape, learning_rate):

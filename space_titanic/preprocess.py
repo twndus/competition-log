@@ -215,10 +215,14 @@ class Preprocessor():
         df['side'] = df['Cabin'].apply(lambda x: x.split('/')[2] if type(x) != float else np.nan)
         df['total_amount'] = df[['RoomService', 'FoodCourt', 'ShoppingMall', 'Spa', 'VRDeck']].sum(axis=1)
 
-        if step == 'fit':
-            self.num_cols.extend(['num', 'total_amount'])
-            self.cat_cols.extend(['deck', 'side'])
-        elif step == 'transform':
-            pass
+        df['GroupId'] = df['PassengerId'].apply(lambda x: x.split('_')[0])
+        df['GroupSize'] = df.groupby("GroupId")["GroupId"].transform("count")
+        df["Alone"] = df["GroupSize"] == 1
 
+        if step == 'fit':
+            self.num_cols.extend(['num', 'total_amount', 'GroupSize'])
+            self.cat_cols.extend(['deck', 'side', 'Alone'])
+        elif step == 'transform':
+            # pass
+            df.drop(columns=['GroupId'], inplace=True)
         return df
