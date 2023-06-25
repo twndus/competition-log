@@ -232,9 +232,10 @@ class Preprocessor():
         return df
     
     def preprocess_machine(self, df, step='transform'):
-
+        df['Product Type'] = df['Product ID'].apply(lambda x: x[0])
         if step == 'fit':
-            pass
+            self.cat_cols.extend(['Product Type'])
+            self.onehot_cols.remove('Product ID')
         elif step == 'transform':
-            pass
+            pass  
         return df

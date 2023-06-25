@@ -41,6 +41,7 @@ import optuna
 import tensorflow as tf
 
 from evaluate import evaluate
+from config import args
 
 metrics = {'classification': 'accuracy',
         'regression': 'rmse'}
@@ -180,7 +181,7 @@ def classification_objective(trial, modelname, train_X, train_y):
         accuracy = model.evaluate(train_X, train_y)[-1]
         
     else:
-        if config.metric == 'auc':
+        if args['metric'] == 'auc':
             score = cross_val_score(
                 model, train_X, train_y, scoring="roc_auc",
                 n_jobs=-1, cv=5)
