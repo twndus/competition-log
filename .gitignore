@@ -162,3 +162,4 @@ cython_debug/
 # Jylee Custom
 **/open/ # 23.04.25
 **config.py # 23.06.23
+**catboost_info/ # 23.06.26

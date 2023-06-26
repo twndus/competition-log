@@ -16,7 +16,7 @@ class Preprocessor():
     def fit(self):
         '''fit data to set configs'''
         # group columns
-        self.num_cols, self.cat_cols = self._group_colummns_by_types()
+        self.num_cols, self.bin_cols, self.cat_cols = self._group_columns_by_types()
         self.onehot_cols = self._filter_onehot_target()
         
         df = self.df_train
@@ -94,17 +94,21 @@ class Preprocessor():
 
         return df
 
-    def _group_colummns_by_types(self):
+    def _group_columns_by_types(self):
         num_cols = []
+        bin_cols = []
         cat_cols = []
 
         for colname in self.df_train.columns:
             if self.df_train[colname].dtype in ['int64', 'float64']:
-                num_cols.append(colname)
+                if len(self.df_train[colname].dropna().unique()) == 2:
+                    bin_cols.append(colname)
+                else:
+                    num_cols.append(colname)
             else:
                 cat_cols.append(colname)
 
-        return num_cols, cat_cols
+        return num_cols, bin_cols, cat_cols
     
     def _filter_onehot_target(self):
         '''전체 n수 대비 10% 이하의 클래스를 가지는 데이터는 onehot encoding'''

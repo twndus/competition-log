@@ -259,12 +259,12 @@ def retrain(modelname, best_params, task, data_splited, test_X):
             model = get_classifier(modelname, task, **best_params)
             
             # train
-            model = model.fit(data_splited[f'{i}th']['X_train'], 
-                data_splited[f'{i}th']['y_train'])
+            model = model.fit(data_splited[f'{i}th']['X_train'].values, 
+                data_splited[f'{i}th']['y_train'].values)
         
             # evaluate
-            train_pred = model.predict(data_splited[f'{i}th']['X_train'])
-            val_pred = model.predict(data_splited[f'{i}th']['X_val'])
+            train_pred = model.predict(data_splited[f'{i}th']['X_train'].values)
+            val_pred = model.predict(data_splited[f'{i}th']['X_val'].values)
             
             train_eval = evaluate(data_splited[f'{i}th']['y_train'], train_pred, 
                      desc='train')
@@ -283,12 +283,12 @@ def optimize(modelname, task, train_X, train_y):
     if task == 'classification':
         objective = partial(
             classification_objective, modelname=modelname, 
-            train_X=train_X, train_y=train_y
+            train_X=train_X.values, train_y=train_y.values
         )
     elif task == 'regression':
         objective = partial(
             regression_objective, modelname=modelname, 
-            train_X=train_X, train_y=train_y
+            train_X=train_X.values, train_y=train_y.values
         )
     study.optimize(objective, n_trials=10)
     return study.best_params

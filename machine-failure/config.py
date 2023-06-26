@@ -7,7 +7,7 @@ args = {
     'test_path': os.path.join(data_dir, 'test.csv'),
     'submission_path': os.path.join(data_dir, 'sample_submission.csv'),
     'task': 'classification',
-    'modelname': 'knn',
+    'modelname': 'catboost',
     'metric': 'auc',
     #'xgboost' #'mlp_keras' #'gbm'#'mlp' #'rf' #'svc' #'logistic' #'knn'
     'dataname': 'machine',
