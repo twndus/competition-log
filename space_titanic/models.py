@@ -163,10 +163,10 @@ def classification_objective(trial, modelname, train_X, train_y):
         # params['verbose']=False 
         # params['min_child_samples'] = trial.suggest_categorical('min_child_samples', [1, 4, 8, 16, 32])
         params = {
-            'iterations':trial.suggest_int("iterations", 1000, 20000),
+            'iterations':trial.suggest_int("iterations", 1000, 2000),
             'od_wait':trial.suggest_int('od_wait', 500, 2300),
             'learning_rate' : trial.suggest_uniform('learning_rate',0.01, 1),
-            'reg_lambda': trial.suggest_uniform('reg_lambda',1e-5,100),
+            'reg_lambda': trial.suggest_uniform('reg_lambda',1e-5,0.1),
             'subsample': trial.suggest_uniform('subsample',0,1),
             'random_strength': trial.suggest_uniform('random_strength',10,50),
             'depth': trial.suggest_int('depth',1, 15),

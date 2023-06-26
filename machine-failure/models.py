@@ -184,10 +184,10 @@ def classification_objective(trial, modelname, train_X, train_y):
         if args['metric'] == 'auc':
             score = cross_val_score(
                 model, train_X, train_y, scoring="roc_auc",
-                n_jobs=-1, cv=5)
+                n_jobs=-1, cv=3)
         else:
             score = cross_val_score(
-                model, train_X, train_y, n_jobs=-1, cv=5)
+                model, train_X, train_y, n_jobs=-1, cv=3)
         score = score.mean()
     return score 
 
@@ -224,7 +224,7 @@ def regression_objective(trial, modelname, train_X, train_y):
         model = AdaBoostRegressor(DecisionTreeRegressor())
     
     score = cross_val_score(
-            model, train_X, train_y, scoring='neg_mean_squared_error', n_jobs=-1, cv=5)
+            model, train_X, train_y, scoring='neg_mean_squared_error', n_jobs=-1, cv=3)
     rmse = score.mean()
     return rmse
 
@@ -259,18 +259,16 @@ def retrain(modelname, best_params, task, data_splited, test_X):
             model = get_classifier(modelname, task, **best_params)
             
             # train
-            model = model.fit(data_splited[f'{i}th']['X_train'], 
-                data_splited[f'{i}th']['y_train'])
+            model = model.fit(data_splited[f'{i}th']['X_train'].values, 
+                data_splited[f'{i}th']['y_train'].values)
         
             # evaluate
-            train_pred = model.predict(data_splited[f'{i}th']['X_train'])
-            val_pred = model.predict(data_splited[f'{i}th']['X_val'])
+            train_pred = model.predict(data_splited[f'{i}th']['X_train'].values)
+            val_pred = model.predict(data_splited[f'{i}th']['X_val'].values)
             
-            metric = metrics[task]
             train_eval = evaluate(data_splited[f'{i}th']['y_train'], train_pred, 
-                     metric=metric, desc='train')
-            _ = evaluate(data_splited[f'{i}th']['y_val'], val_pred, 
-                     metric=metric, desc='val')
+                     desc='train')
+            _ = evaluate(data_splited[f'{i}th']['y_val'], val_pred, desc='val')
             print(train_eval)
             test_pred = model.predict(test_X)
         
@@ -285,12 +283,12 @@ def optimize(modelname, task, train_X, train_y):
     if task == 'classification':
         objective = partial(
             classification_objective, modelname=modelname, 
-            train_X=train_X, train_y=train_y
+            train_X=train_X.values, train_y=train_y.values
         )
     elif task == 'regression':
         objective = partial(
             regression_objective, modelname=modelname, 
-            train_X=train_X, train_y=train_y
+            train_X=train_X.values, train_y=train_y.values
         )
     study.optimize(objective, n_trials=10)
     return study.best_params

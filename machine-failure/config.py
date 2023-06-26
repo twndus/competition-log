@@ -9,7 +9,6 @@ args = {
     'task': 'classification',
     'modelname': 'mlp',
     'metric': 'auc',
-    #'xgboost' #'mlp_keras' #'gbm'#'mlp' #'rf' #'svc' #'logistic' #'knn'
     'dataname': 'machine',
     'epochs': 20,
 }
