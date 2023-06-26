@@ -238,8 +238,10 @@ class Preprocessor():
     
     def preprocess_machine(self, df, step='transform'):
         df['Product Type'] = df['Product ID'].apply(lambda x: x[0])
+        df['total'] = df[self.bin_cols].sum(axis=1)
         if step == 'fit':
             self.cat_cols.extend(['Product Type'])
+            self.num_cols.extend(['total'])
             self.onehot_cols.remove('Product ID')
         elif step == 'transform':
             pass  
