@@ -239,9 +239,23 @@ class Preprocessor():
     def preprocess_machine(self, df, step='transform'):
         df['Product Type'] = df['Product ID'].apply(lambda x: x[0])
         df['total'] = df[self.bin_cols].sum(axis=1)
+
+        # Create a new feature by divided 'Air temperature' from 'Process temperature'
+        df["Temperature ratio"] = df['Process temperature [K]'] / df['Air temperature [K]']
+        
+        # Create a new feature by multiplying 'Torque' and 'Rotational speed'
+        df['Torque * Rotational speed'] = df['Torque [Nm]'] * df['Rotational speed [rpm]']
+
+        # Create a new feature by multiplying 'Torque' by 'Tool wear'
+        df['Torque * Tool wear'] = df['Torque [Nm]'] * df['Tool wear [min]']
+        
+        # Create a new feature by multiplying 'Torque' by 'Rotational speed'
+        df['Torque * Rotational speed'] = df['Torque [Nm]'] * df['Rotational speed [rpm]']
+        
         if step == 'fit':
             self.cat_cols.extend(['Product Type'])
-            self.num_cols.extend(['total'])
+            self.num_cols.extend(['total', 'Temperature ratio', 'Torque * Rotational speed', 
+                'Torque * Tool wear', 'Torque * Rotational speed'])
             self.onehot_cols.remove('Product ID')
         elif step == 'transform':
             pass  
