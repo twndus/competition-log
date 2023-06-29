@@ -266,14 +266,13 @@ class Preprocessor():
         return df
 
     def preprocess_enzyme(self, df, step='transform'):
-#        df['Chi_sum'] = df[['Chi1', 'Chi1n', 'Chi1v', 'Chi2n', 'Chi2v', 'Chi3v', 'Chi4n']].sum(axis=1)
-#        df['Chi_phi'] = df[['Chi1', 'Chi1n', 'Chi1v', 'Chi2n', 'Chi2v', 'Chi3v', 'Chi4n']].prod(axis=1)
-#        df['EState_sum'] = df[['EState_VSA1', 'EState_VSA2']].sum(axis=1)
-#        df['EState_phi'] = df[['EState_VSA1', 'EState_VSA2']].prod(axis=1)
+        df['Chi_sum'] = df[['Chi1', 'Chi1n', 'Chi1v', 'Chi2n', 'Chi2v', 'Chi3v', 'Chi4n']].sum(axis=1)
+        df['Chi_phi'] = df[['Chi1', 'Chi1n', 'Chi1v', 'Chi2n', 'Chi2v', 'Chi3v', 'Chi4n']].prod(axis=1)
+        df['EState_sum'] = df[['EState_VSA1', 'EState_VSA2']].sum(axis=1)
+        df['EState_phi'] = df[['EState_VSA1', 'EState_VSA2']].prod(axis=1)
         
         if step == 'fit':
-#            self.num_cols.extend(['Chi_sum', 'Chi_phi', 'EState_sum', 'EState_phi'])
-            pass
+           self.num_cols.extend(['Chi_sum', 'Chi_phi', 'EState_sum', 'EState_phi'])
         else:
             pass
         return df

@@ -10,3 +10,4 @@
 1. rf_pure	- train:1.0000, public:0.5689
 1. extra_pure	- train:0.5586, public:0.5526
 1. mlp_fe	- train:0.5692, public:0.5747
+1. rf_fe	- train:x.xxxx, public:x.xxxx
