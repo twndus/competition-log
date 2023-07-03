@@ -32,11 +32,12 @@ from sklearn.ensemble import (
 from sklearn.neural_network import MLPClassifier, MLPRegressor
 from sklearn.ensemble import (
     HistGradientBoostingClassifier, HistGradientBoostingRegressor,
-    ExtraTreesClassifier,
-    )
+    ExtraTreesClassifier)
 from sklearn.svm import SVC
 from xgboost import XGBClassifier
 from catboost import CatBoostClassifier
+from lightgbm import LGBMClassifier
+from sklearn.multioutput import MultiOutputClassifier
 
 from sklearn.model_selection import cross_val_score
 import optuna
@@ -46,9 +47,6 @@ from evaluate import evaluate
 from keras_models import mlpclassifier_keras
 import config
 from model_params import classification_params, regression_params
-
-metrics = {'classification': 'accuracy',
-        'regression': 'rmse'}
 
 def get_params(modelname, params_, trial):
     params = {}
@@ -76,6 +74,8 @@ def get_model(modelname='knn', task=None, input_shape=None, **args):
         model = get_classifier(modelname, input_shape=input_shape, **args)
     elif task == 'regression':
         model = get_regressor(modelname, input_shape=input_shape, **args)
+    if config.args['multi-label']:
+        model = MultiOutputClassifier(model)
     return model
 
 def get_regressor(modelname='knn', input_shape=None, **args):
@@ -115,6 +115,8 @@ def get_classifier(modelname='knn', input_shape=None, **args):
     elif modelname == 'mlp_keras':
         learning_rate = args['learning_rate']
         model = mlpclassifier_keras(input_shape, learning_rate)
+    elif modelname == 'lgbm':
+        model = LGBMClassifier(**args)
     return model
 
 def classification_objective(trial, modelname, train_X, train_y):
@@ -208,114 +210,3 @@ def optimize(modelname, task, train_X, train_y):
         )
     study.optimize(objective, n_trials=10)
     return study.best_params
-
-
-# def classification_objective(trial, modelname, train_X, train_y):
-#     classifier_name = trial.suggest_categorical('classifier', [modelname])
-#     # params = classification_params[modelname]
-#     params = get_params(modelname, trial)
-#     if modelname == 'knn':
-#         # arg_n = trial.suggest_categorical('n_neighbors', [3, 5, 7])
-#         model = KNeighborsClassifier(**params)
-#     elif modelname == 'logistic':
-#         # arg_p = trial.suggest_categorical('penalty', ['l1', 'l2', 'elasticnet'])
-#         # arg_tol = trial.suggest_float('tol', 1e-5, 1e-2)
-#         model = LogisticRegression(**params)
-#     elif modelname == 'svc':
-#         # arg_c = trial.suggest_float('C', 0.1, 1000, log=True)
-#         # arg_gamma = trial.suggest_float('gamma', 0.0001, 1, log=True)
-#         model = SVC(**params)
-#     elif modelname == 'rf':
-#         # params = {}
-#         # params['criterion'] = trial.suggest_categorical('criterion', ['gini', 'entropy'])
-#         # params['max_depth'] = trial.suggest_int('max_depth', 80, 110, step=10)
-#         # params['max_features'] = trial.suggest_int('max_features', 2, 4)
-#         # params['n_estimators'] = trial.suggest_int('n_estimators', 50, 500, step=100)
-#         model = RandomForestClassifier(warm_start=True, **params)
-#     elif modelname == 'ada':
-#         # arg_estimators = trial.suggest_int('n_estimators', 100, 1000, step=100)
-#         # arg_lr = trial.suggest_float('learning_rate', 0.0001, 1, log=True)
-#         # arg_algorithms = trial.suggest_categorical('algorithm', ['SAMME', 'SAMME.R'])
-#         model = AdaBoostClassifier(**params)
-#     elif modelname == 'mlp':
-#         # params = {}
-#         # params['learning_rate_init'] = trial.suggest_float('learning_rate_init', 0.0001, 1, log=True)
-#         # params['learning_rate'] = trial.suggest_categorical('learning_rate', ['constant', 'invscaling', 'adaptive'])
-#         # params['alpha'] = trial.suggest_float('alpha', 0.0001, 1, log=True)
-#         # params['activation'] = trial.suggest_categorical('activation', ['logistic', 'relu', 'tanh'])
-#         # params['solver'] = trial.suggest_categorical('solver', ['lbfgs', 'sgd', 'adam'])
-#         # params['batch_size'] = trial.suggest_int('batch_size', 1, 1000, log=True)
-#         # params['hidden_layer_sizes'] = trial.suggest_int('hidden_layer_sizes', 1, 1000)
-#         # params['max_iter'] = trial.suggest_int('max_iter', 100, 1000)
-#         model = MLPClassifier(warm_start=True, **params)
-#     elif modelname == 'gbm':
-#         params = {}
-#         # params['learning_rate'] = trial.suggest_float('learning_rate', 0.0001, 1, log=True)
-#         # params['max_iter'] = trial.suggest_int('max_iter', 100, 1000, step=100)
-#         # params['max_depth'] = trial.suggest_int('max_depth', 80, 110, step=10)
-#         # params['l2_regularization'] = trial.suggest_float('l2_regularization', 0.01, 1, log=True)
-# #        arg_features = trial.suggest_categorical('max_features', ['auto', 'sqrt', 'log2', None])
-#         model = HistGradientBoostingClassifier(warm_start=True, **params)
-#     elif modelname == 'xgboost':
-#         # params = {}
-#         # params['n_estimators'] = trial.suggest_int('n_estimators', 100, 500, step=100)
-#         # params['max_depth'] = trial.suggest_int('max_depth', 3, 9, step=2)
-#         # # max_leaves
-#         # # max_bin
-#         # # tree_method
-#         # params['min_child_weight'] = trial.suggest_float("min_child_weight", 1, 6, step=1)
-#         # params['learning_rate'] = trial.suggest_float('learning_rate', 0.0001, 1, log=True)
-#         # # booster
-#         # # n_jobs
-#         # params['subsample'] = trial.suggest_float('subsample', 0.5, 0.9)
-#         # params['colsample_bytree'] = trial.suggest_float('colsample_bytree', 0.5, 0.9)
-#         # params['gamma'] = trial.suggest_int('gamma', 1, 9, log=True)
-#         # params['reg_alpha'] = trial.suggest_float('reg_alpha', 0.00001, 1, log=True)
-#         # params['reg_lambda'] = trial.suggest_float('reg_lambda', 0.00001, 1, log=True)
-#         if config.args['multi-label']:
-#             model = XGBClassifier(tree_method="hist", **params)
-#         else:
-#             model = XGBClassifier(**params)
-#     elif modelname == 'mlp_keras':
-#         # arg_lr = trial.suggest_float('learning_rate', 0.0001, 1, log=True)
-#         epochs = 150
-#         batch_size = 100
-#         model = mlpclassifier_keras(train_X.shape[1:], **params)
-#         model.fit(train_X, train_y, validation_split=0.2, 
-#                 batch_size=batch_size, epochs=epochs)
-#     elif modelname == 'catboost':
-#         params = {
-#             'iterations':trial.suggest_int("iterations", 1000, 20000),
-#             'od_wait':trial.suggest_int('od_wait', 500, 2300),
-#             'learning_rate' : trial.suggest_uniform('learning_rate',0.01, 1),
-#             'reg_lambda': trial.suggest_uniform('reg_lambda',1e-5,100),
-#             'subsample': trial.suggest_uniform('subsample',0,1),
-#             'random_strength': trial.suggest_uniform('random_strength',10,50),
-#             'depth': trial.suggest_int('depth',1, 15),
-#             'min_data_in_leaf': trial.suggest_int('min_data_in_leaf',1,30),
-#             'leaf_estimation_iterations': trial.suggest_int('leaf_estimation_iterations',1,15),
-#             'bagging_temperature' :trial.suggest_loguniform('bagging_temperature', 0.01, 100.00),
-#             'colsample_bylevel':trial.suggest_float('colsample_bylevel', 0.4, 1.0),
-#         }
-#         model = CatBoostClassifier(**params)
-#     elif modelname == 'extratree':
-#         params = {}
-#         params['n_estimators'] = trial.suggest_int('n_estimators', 100, 500, step=100)
-#         params['criterion'] = trial.suggest_categorical('criterion', ['gini', 'entropy', 'log_loss'])
-#         params['max_depth'] = trial.suggest_int('max_depth', 3, 9, step=2)
-#         params['max_features'] = trial.suggest_categorical('max_features', ['sqrt', 'log2', None])
-#         model = ExtraTreesClassifier(warm_start=True, **params)
-
-#     if modelname.endswith('keras'): 
-#         accuracy = model.evaluate(train_X, train_y)[-1]
-        
-#     else:
-#         if config.args['metric'] == 'auc':
-#             score = cross_val_score(
-#                 model, train_X, train_y, scoring="roc_auc",
-#                 n_jobs=-1, cv=3)
-#         else:
-#             score = cross_val_score(
-#                 model, train_X, train_y, n_jobs=-1, cv=3)
-#         score = score.mean()
-#     return score 

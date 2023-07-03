@@ -80,6 +80,17 @@ classification_params = {
         'bagging_temperature': {'type': 'float','continuous': True, 'values': [0.01, 100, None, True]},
         'colsample_bylevel': {'type': 'float','continuous': True, 'values': [0.4, 1.0, 0.1, False]},
     },
+    'lgbm': {
+        'n_estimators': {'type': 'int', 'continuous': True, 'values': [50, 500, 100, False]},
+        'max_depth': {'type': 'int', 'continuous': True, 'values': [4, 12, 2, False]},
+        'min_child_samples': {'type': 'int', 'continuous': True, 'values': [4, 20, 2, False]},
+        'learning_rate': {'type': 'float','continuous': True, 'values': [0.0001, 1, None, True]},
+        'subsample': {'type': 'float','continuous': True, 'values': [0.5, 0.9, None, False]},
+        'colsample_bytree': {'type': 'float','continuous': True, 'values': [0.5, 0.9, None, False]},
+        'colsample_bynode': {'type': 'float','continuous': True, 'values': [0.5, 0.9, None, False]},
+        'reg_alpha': {'type': 'float','continuous': True, 'values': [0.00001, 1, None, True]},
+        'reg_lambda': {'type': 'float','continuous': True, 'values': [0.00001, 1, None, True]},
+    },
 }
 
 regression_params = {
@@ -113,58 +124,3 @@ regression_params = {
         'loss': {'type': 'cat', 'continuous': False, 'values': ['log_loss', 'deviance', 'exponential']},
     }
 }
-
-# classification_params = {
-#     'knn': {
-#         'n_neighbors': {'type': 'cat', 'continuous': False, 'values': [3, 5, 7]},
-#     },
-#     'logistic': {
-#         'penalty': {'type': 'cat', 'continuous': False, 'values': ['l1', 'l2', 'elasticnet']},
-#         'tol': {'type': 'float','continuous': True, 'values': [1e-5, 1e-2, None, True]},
-#     },
-#     'svc': {
-#         'C': {'type': 'float','continuous': True, 'values': [0.1, 1000, None, True]},
-#         'gamma': {'type': 'float','continuous': True, 'values': [0.0001, 1, None, True]},
-#     },
-#     'rf': {
-#         'criterion': {'type': 'cat', 'continuous': False, 'values': ['gini', 'entropy']},
-#         'max_depth': {'type': 'int', 'continuous': True, 'values': [80, 110, 10, False]},
-#         'max_features': {'type': 'int', 'continuous': True, 'values': [2, 4, 1, False]},
-#         'n_estimators': {'type': 'int', 'continuous': True, 'values': [50, 500, 100, False]},
-#     },
-#     'ada': {
-#         'n_estimators': {'type': 'int', 'continuous': True, 'values': [100, 1000, 100, False]},
-#         'learning_rate': {'type': 'float','continuous': True, 'values': [0.0001, 1, None, True]},
-#         'algorithm': {'type': 'cat', 'continuous': False, 'values': ['SAMME', 'SAMME.R']},
-#     },
-#     'mlp': {
-#         'learning_rate_init': {'type': 'float','continuous': True, 'values': [0.0001, 1, None, True]},
-#         'learning_rate': {'type': 'cat', 'continuous': False, 'values': ['constant', 'invscaling', 'adaptive']},
-#         'alpha': {'type': 'float','continuous': True, 'values': [0.0001, 1, 1, True]},
-#         'activation': {'type': 'cat', 'continuous': False, 'values': ['logistic', 'relu', 'tanh']},
-#         'learning_rate': {'type': 'cat', 'continuous': False, 'values': ['constant', 'invscaling', 'adaptive']},
-#         'batch_size': {'type': 'int', 'continuous': True, 'values': [1, 1000, 100, True]},
-#         'hidden_layer_sizes': {'type': 'int', 'continuous': True, 'values': [1, 1000, 1, True]},
-#         'max_iter': {'type': 'int', 'continuous': True, 'values': [100, 1000, 100, False]},
-#     },
-#     'gbm': {
-#         'learning_rate': {'type': 'float','continuous': True, 'values': [0.0001, 1, 1, True]},
-#         'max_iter': {'type': 'int', 'continuous': True, 'values': [100, 1000, 100, False]},
-#         'max_depth': {'type': 'int', 'continuous': True, 'values': [80, 110, 10, False]},
-#         'l2_regularization': {'type': 'float','continuous': True, 'values': [0.001, 10, 1, True]},
-#     },
-#     'xgboost': {
-#         'n_estimators': {'type': 'int', 'continuous': True, 'values': [50, 500, 100, False]},
-#         'max_depth': {'type': 'int', 'continuous': True, 'values': [80, 110, 10, False]},
-#         'min_child_weight': {'type': 'float','continuous': True, 'values': [1, 6, 1, False]},
-#         'learning_rate': {'type': 'float','continuous': True, 'values': [0.0001, 1, None, True]},
-#         'subsample': {'type': 'float','continuous': True, 'values': [0.5, 0.9, None, False]},
-#         'colsample_bytree': {'type': 'float','continuous': True, 'values': [0.5, 0.9, None, False]},
-#         'gamma': {'type': 'int', 'continuous': True, 'values': [1, 9, None, True]},
-#         'reg_alpha': {'type': 'float','continuous': True, 'values': [0.00001, 1, None, True]},
-#         'reg_lambda': {'type': 'float','continuous': True, 'values': [0.00001, 1, None, True]},
-#     },
-#     'mlp_keras': {
-#         'learning_rate': {'type': 'float','continuous': True, 'values': [0.0001, 1, None, True]},
-#     }
-# }
