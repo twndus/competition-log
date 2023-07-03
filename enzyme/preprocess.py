@@ -52,6 +52,9 @@ class Preprocessor():
         df = self._log_transform(df)
         df = self._exp_transform(df)
 
+        # if self.dataname == 'enzyme':
+        #     df = self.preprocess_enzyme(df, 'fit')
+
         # numeric scaling
         self.scaler = StandardScaler()
         self.scaler = self.scaler.fit(df[self.num_cols])
@@ -90,11 +93,16 @@ class Preprocessor():
         df = self._log_transform(df)
         df = self._exp_transform(df)
 
+        # if self.dataname == 'enzyme':
+        #     df = self.preprocess_enzyme(df, 'transform')
+
         # numeric scaling
         df[self.num_cols] = self.scaler.transform(df[self.num_cols])
 
         # nan imputate
         df[self.num_cols] = self.imputer.transform(df[self.num_cols])
+
+        print(df.shape)
 
         return df
 
@@ -266,13 +274,37 @@ class Preprocessor():
         return df
 
     def preprocess_enzyme(self, df, step='transform'):
+
         df['Chi_sum'] = df[['Chi1', 'Chi1n', 'Chi1v', 'Chi2n', 'Chi2v', 'Chi3v', 'Chi4n']].sum(axis=1)
-        df['Chi_phi'] = df[['Chi1', 'Chi1n', 'Chi1v', 'Chi2n', 'Chi2v', 'Chi3v', 'Chi4n']].prod(axis=1)
         df['EState_sum'] = df[['EState_VSA1', 'EState_VSA2']].sum(axis=1)
-        df['EState_phi'] = df[['EState_VSA1', 'EState_VSA2']].prod(axis=1)
+
+        df['BertzCT_MaxAbsEStateIndex_Ratio'] = df['BertzCT'] / (df['MaxAbsEStateIndex'] + 1e-12)
+        df['BertzCT_ExactMolWt_Product'] = df['BertzCT'] * df['ExactMolWt']
+        df['NumHeteroatoms_FpDensityMorgan1_Ratio'] = df['NumHeteroatoms'] / (df['FpDensityMorgan1'] + 1e-12)
+        df['VSA_EState9_EState_VSA1_Ratio'] = df['VSA_EState9'] / (df['EState_VSA1'] + 1e-12)
+        df['PEOE_VSA10_SMR_VSA5_Ratio'] = df['PEOE_VSA10'] / (df['SMR_VSA5'] + 1e-12)
+        df['Chi1v_ExactMolWt_Product'] = df['Chi1v'] * df['ExactMolWt']
+        df['Chi2v_ExactMolWt_Product'] = df['Chi2v'] * df['ExactMolWt']
+        df['Chi3v_ExactMolWt_Product'] = df['Chi3v'] * df['ExactMolWt']
+        df['EState_VSA1_NumHeteroatoms_Product'] = df['EState_VSA1'] * df['NumHeteroatoms']
+        df['PEOE_VSA10_Chi1_Ratio'] = df['PEOE_VSA10'] / (df['Chi1'] + 1e-12)
+        df['MaxAbsEStateIndex_NumHeteroatoms_Ratio'] = df['MaxAbsEStateIndex'] / (df['NumHeteroatoms'] + 1e-12)
+        df['BertzCT_Chi1_Ratio'] = df['BertzCT'] / (df['Chi1'] + 1e-12)
+        df['Ring_Density'] = divide_with_check(df['NumHeteroatoms'], df['SlogP_VSA3'])
+        df['Hydrophilic_Surface'] = df['VSA_EState9'] * df['EState_VSA2']
         
         if step == 'fit':
-           self.num_cols.extend(['Chi_sum', 'Chi_phi', 'EState_sum', 'EState_phi'])
+           self.num_cols.extend([
+                'Chi_sum', 'EState_sum', 'BertzCT_MaxAbsEStateIndex_Ratio', 'BertzCT_ExactMolWt_Product', 
+                'NumHeteroatoms_FpDensityMorgan1_Ratio', 'VSA_EState9_EState_VSA1_Ratio',
+                'PEOE_VSA10_SMR_VSA5_Ratio', 'Chi1v_ExactMolWt_Product', 'Chi2v_ExactMolWt_Product', 
+                'Chi3v_ExactMolWt_Product', 'EState_VSA1_NumHeteroatoms_Product', 'PEOE_VSA10_Chi1_Ratio',
+                'MaxAbsEStateIndex_NumHeteroatoms_Ratio', 'BertzCT_Chi1_Ratio',
+                'Ring_Density', 'Hydrophilic_Surface'])
         else:
             pass
         return df
+
+def divide_with_check(a,b):
+    result = np.where(b != 0, np.divide(a, b), 0)
+    return result

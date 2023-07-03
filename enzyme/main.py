@@ -39,7 +39,7 @@ def main():#**args):
     
     print(best_params)
 
-#    best_params = {'learning_rate': 0.001}
+#    best_params = {'learning_rate': 0.00001}
     # retrain and get preds
     pred_array, train_metrics = retrain(
         args['modelname'],
@@ -56,9 +56,9 @@ def main():#**args):
 #        test_pred = np.apply_along_axis(
 #                lambda x: np.argmax(np.bincount(x)), axis=0, arr=pred_array)
 #        train_metric = np.mean(train_metrics)
-    elif args['task'] == 'regression':
-        test_pred = np.mean(pred_array, axis=0)
-        train_metric = np.mean(train_metrics, axis=0)
+#    elif args['task'] == 'regression':
+#        test_pred = np.mean(pred_array, axis=0)
+#        train_metric = np.mean(train_metrics, axis=0)
 
     # submission
     submission_df = data_loader(args['submission_path'], format='csv')
