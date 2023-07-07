@@ -11,3 +11,8 @@
 1. extra_pure	- train:0.5586, public:0.5526
 1. mlp_fe	- train:0.5692, public:0.5747
 1. rf_fe	- train:x.xxxx, public:x.xxxx
+
+
+# TODO
+1. ensemble with library mlp 10
+2. augmentation ! oversampling!

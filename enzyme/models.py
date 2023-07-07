@@ -40,6 +40,7 @@ from lightgbm import LGBMClassifier
 from sklearn.multioutput import MultiOutputClassifier
 
 from sklearn.model_selection import cross_val_score
+from sklearn.metrics import roc_auc_score
 import optuna
 import tensorflow as tf
 
@@ -75,7 +76,7 @@ def get_model(modelname='knn', task=None, input_shape=None, **args):
     elif task == 'regression':
         model = get_regressor(modelname, input_shape=input_shape, **args)
     if config.args['multi-label']:
-        model = MultiOutputClassifier(model)
+        model = MultiOutputClassifier(model, n_jobs=-1)
     return model
 
 def get_regressor(modelname='knn', input_shape=None, **args):
@@ -124,13 +125,16 @@ def classification_objective(trial, modelname, train_X, train_y):
     model = get_model(
         modelname, task='classification', input_shape=train_X.shape[1:], **params)
     if config.args['metric'] == 'auc':
-            score = cross_val_score(
-                model, train_X, train_y, scoring="roc_auc",
-                n_jobs=-1, cv=3)
+#            score = cross_val_score(
+#                model, train_X, train_y, scoring="roc_auc",
+#                n_jobs=-1, cv=3)
+            model.fit(train_X, train_y)
+            y_pred = model.predict(train_X)
+            score = roc_auc_score(train_y, y_pred, multi_class='ovr')
     else:
         score = cross_val_score(
             model, train_X, train_y, n_jobs=-1, cv=3)
-    score = score.mean()
+        score = score.mean()
     return score
 
 def regression_objective(trial, modelname, train_X, train_y):
@@ -173,8 +177,10 @@ def retrain(modelname, best_params, task, data_splited, test_X):
                 data_splited[f'{i}th']['y_train'])[1]
             test_pred = (model.predict(test_X) > 0.5).astype(int)
         else:
-            # model
-            model = get_classifier(modelname, task, **best_params)
+            # define model
+            model = get_model(
+                modelname, task='classification', input_shape=None, 
+                **best_params)
             
             # train
             model = model.fit(data_splited[f'{i}th']['X_train'].values, 
@@ -196,6 +202,35 @@ def retrain(modelname, best_params, task, data_splited, test_X):
 
     return np.array(pred_list), train_accs
 
+def retrain_whole(modelname, best_params, task, train_X, train_y, test_X):
+    pred_list = []
+    train_accs = []
+    
+    if 'classifier' in best_params.keys():
+        del best_params['classifier']
+    
+    # define model
+    model = get_model(
+        modelname, task='classification', input_shape=None, 
+        **best_params)
+    
+    # train
+    model = model.fit(train_X, train_y)
+
+    # evaluate
+    train_pred = model.predict(train_X)    
+    train_eval = evaluate(train_y, train_pred, desc='train')
+    print(train_eval)
+    
+    test_pred = model.predict(test_X)
+    
+    # pred
+    pred_list.append(test_pred)
+    train_accs.append(train_eval)
+
+    return np.array(pred_list), train_accs
+
+
 def optimize(modelname, task, train_X, train_y):
     study = optuna.create_study(direction='maximize')
     if task == 'classification':
@@ -208,5 +243,5 @@ def optimize(modelname, task, train_X, train_y):
             regression_objective, modelname=modelname, 
             train_X=train_X.values, train_y=train_y.values
         )
-    study.optimize(objective, n_trials=10)
+    study.optimize(objective, n_trials=30)
     return study.best_params

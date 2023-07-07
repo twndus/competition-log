@@ -5,6 +5,9 @@ from scipy.stats import skew
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.impute import KNNImputer
 
+from skmultilearn.problem_transform import LabelPowerset
+from imblearn.over_sampling import RandomOverSampler
+
 class Preprocessor():
     '''only X data will be preprocessed with this class'''
     def __init__(self, df_train, dataname):
@@ -65,7 +68,7 @@ class Preprocessor():
 
         # get mode
 
-    def transform(self, df):
+    def transform(self, df, train=False):
         # custom preprocess
         if self.dataname =='titanic':
             df = self.preprocess_titanic(df, 'transform')
@@ -101,8 +104,6 @@ class Preprocessor():
 
         # nan imputate
         df[self.num_cols] = self.imputer.transform(df[self.num_cols])
-
-        print(df.shape)
 
         return df
 
@@ -308,3 +309,17 @@ class Preprocessor():
 def divide_with_check(a,b):
     result = np.where(b != 0, np.divide(a, b), 0)
     return result
+
+
+def data_augmentation(train_X, train_y):
+    lp = LabelPowerset()
+    ros = RandomOverSampler(random_state=42)
+
+    # Applies the above stated multi-label (ML) to multi-class (MC) transformation.
+    yt = lp.transform(train_y)
+    X_resampled, y_resampled = ros.fit_resample(train_X, yt)
+
+    # Inverts the ML-MC transformation to recreate the ML set
+    y_resampled = pd.DataFrame(lp.inverse_transform(y_resampled).toarray(), columns=train_y.columns)
+
+    return X_resampled, y_resampled

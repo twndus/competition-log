@@ -2,6 +2,7 @@ import os, json, pickle
 
 import pandas as pd
 from sklearn.model_selection import KFold, StratifiedKFold
+from iterstrat.ml_stratifiers import MultilabelStratifiedKFold
 
 from config import args
 
@@ -17,9 +18,9 @@ def kfold_split(df_X, df_y, dataname, n_splits=5):
         with open(skf_path, 'rb') as f:
             return pickle.load(f)
         
-    def _store_folded_data(skf_path):
+    def _store_folded_data(skf_path, n_splits):
         if args['multi-label'] == False:
-            skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+            skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=42)
             skf_data = {}
             for i, (train_index, val_index) in enumerate(skf.split(df_X, df_y, df_y)):
                 X_train, X_val = df_X.iloc[train_index,:], df_X.iloc[val_index,:]
@@ -29,9 +30,14 @@ def kfold_split(df_X, df_y, dataname, n_splits=5):
                     'y_train': y_train, 'y_val': y_val
                     }
         else:
-            skf = KFold(n_splits=5, shuffle=True, random_state=42)
+            mskf = MultilabelStratifiedKFold(
+                    n_splits=n_splits, shuffle=True, random_state=42)
+            
             skf_data = {}
-            for i, (train_index, val_index) in enumerate(skf.split(df_X, df_y)):
+            for i, (train_index, val_index) in enumerate(mskf.split(df_X, df_y)):
+#            skf = KFold(n_splits=n_splits, shuffle=True, random_state=42)
+#            skf_data = {}
+#            for i, (train_index, val_index) in enumerate(skf.split(df_X, df_y)):
                 X_train, X_val = df_X.iloc[train_index,:], df_X.iloc[val_index,:]
                 y_train, y_val = df_y.iloc[train_index,:], df_y.iloc[val_index,:]
                 skf_data[f'{i}th'] = {
@@ -42,7 +48,7 @@ def kfold_split(df_X, df_y, dataname, n_splits=5):
             pickle.dump(skf_data, f, pickle.HIGHEST_PROTOCOL)
 
     if not os.path.exists(skf_path):
-        _store_folded_data(skf_path)
+        _store_folded_data(skf_path, n_splits)
     
     skf_data = _load_skf_stored(skf_path)
     return skf_data

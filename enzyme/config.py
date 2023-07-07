@@ -7,11 +7,13 @@ args = {
     'test_path': os.path.join(data_dir, 'test.csv'),
     'submission_path': os.path.join(data_dir, 'sample_submission.csv'),
     'task': 'classification',
-    'modelname': 'lgbm',
+#    'modelname': 'lgbm+mlp',
+    'modelname': 'mlp',
     'metric': 'auc',
     #'xgboost' #'mlp_keras' #'gbm'#'mlp' #'rf' #'svc' #'logistic' #'knn'
     'dataname': 'enzyme',
     'multi-label': True,
+    'oversampling': True,
     'epochs': 20,
 }
 
