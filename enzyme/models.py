@@ -162,10 +162,10 @@ def retrain(modelname, best_params, task, data_splited, test_X):
             batch_size = 20
 
             # model
-            model = get_classifier(modelname, task, input_shape=test_X.shape[1:], **best_params)
+            model = get_classifier(modelname, input_shape=test_X.shape[1:], **best_params)
             
             # callback
-            callback = tf.keras.callbacks.EarlyStopping(patience=5)
+            callback = tf.keras.callbacks.EarlyStopping(patience=10)
 
             history = model.fit(
                 data_splited[f'{i}th']['X_train'], 
@@ -202,33 +202,68 @@ def retrain(modelname, best_params, task, data_splited, test_X):
 
     return np.array(pred_list), train_accs
 
-def retrain_whole(modelname, best_params, task, train_X, train_y, test_X):
-    pred_list = []
-    train_accs = []
+def train_keras(modelname, best_params, task, data_splited, test_X):
+    pred_list, train_accs = [], []
     
-    if 'classifier' in best_params.keys():
-        del best_params['classifier']
-    
-    # define model
-    model = get_model(
-        modelname, task='classification', input_shape=None, 
-        **best_params)
-    
-    # train
-    model = model.fit(train_X, train_y)
+    for i in range(len(data_splited.keys())):
+        # learning params
+        epochs = 500
+        batch_size = 20
 
-    # evaluate
-    train_pred = model.predict(train_X)    
-    train_eval = evaluate(train_y, train_pred, desc='train')
-    print(train_eval)
-    
-    test_pred = model.predict(test_X)
-    
-    # pred
-    pred_list.append(test_pred)
-    train_accs.append(train_eval)
+        args = {'learning_rate': config.keras_params['learning_rate']}
+
+        # model
+        model = get_classifier(
+                modelname, input_shape=test_X.shape[1:], **args)
+        
+        # callback
+        callback = tf.keras.callbacks.EarlyStopping(patience=5)
+
+        history = model.fit(
+            data_splited[f'{i}th']['X_train'], 
+            data_splited[f'{i}th']['y_train'], epochs=config.keras_params['epochs'], 
+            validation_data=(data_splited[f'{i}th']['X_val'], 
+            data_splited[f'{i}th']['y_val']),
+                batch_size=config.keras_params['batch_size'], callbacks=[callback])
+        train_eval = model.evaluate(data_splited[f'{i}th']['X_train'], 
+            data_splited[f'{i}th']['y_train'])[1]
+        test_pred = (model.predict(test_X) > 0.5).astype(int)
+        print(train_eval)
+        
+        # pred
+        pred_list.append(test_pred)
+        train_accs.append(train_eval)
 
     return np.array(pred_list), train_accs
+
+
+#def retrain_whole(modelname, best_params, task, train_X, train_y, test_X):
+#    pred_list = []
+#    train_accs = []
+#    
+#    if 'classifier' in best_params.keys():
+#        del best_params['classifier']
+#    
+#    # define model
+#    model = get_model(
+#        modelname, task='classification', input_shape=None, 
+#        **best_params)
+#    
+#    # train
+#    model = model.fit(train_X, train_y)
+#
+#    # evaluate
+#    train_pred = model.predict(train_X)    
+#    train_eval = evaluate(train_y, train_pred, desc='train')
+#    print(train_eval)
+#    
+#    test_pred = model.predict(test_X)
+#    
+#    # pred
+#    pred_list.append(test_pred)
+#    train_accs.append(train_eval)
+#
+#    return np.array(pred_list), train_accs
 
 
 def optimize(modelname, task, train_X, train_y):

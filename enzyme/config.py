@@ -8,7 +8,7 @@ args = {
     'submission_path': os.path.join(data_dir, 'sample_submission.csv'),
     'task': 'classification',
 #    'modelname': 'lgbm+mlp',
-    'modelname': 'mlp',
+    'modelname': 'mlp_keras',
     'metric': 'auc',
     #'xgboost' #'mlp_keras' #'gbm'#'mlp' #'rf' #'svc' #'logistic' #'knn'
     'dataname': 'enzyme',
@@ -17,3 +17,8 @@ args = {
     'epochs': 20,
 }
 
+keras_params = {
+    'learning_rate': 0.0001,
+    'epochs': 500,
+    'batch_size': 100,
+}

@@ -4,10 +4,10 @@ import numpy as np
 
 from preprocess import Preprocessor, data_augmentation
 from data import data_loader, kfold_split
-from models import get_classifier, optimize, retrain
+from models import get_classifier, optimize, retrain, train_keras
 from evaluate import evaluate
 from submission import submission
-from config import args
+from config import args, keras_params
 
 from sklearn.metrics import accuracy_score
 
@@ -33,38 +33,56 @@ def main():#**args):
     # split data with CV
     data_splited = kfold_split(
         train_X, train_y, args['dataname'], n_splits=10)
-    
-#    if '+' in args['modelname']:
+
+#    if args['modelname'].endswith('_keras'):
+#        # retrain and get preds
+#        test_preds, train_metrics = train_keras(
+#            args['modelname'],
+#            keras_params,
+#            args['task'],
+#            data_splited,
+#            test_X
+#        )
+#
+#        print("test_preds: ",test_preds)
+#    else:
     test_preds, train_metrics = [], []
     for modelname in args['modelname'].split('+'):
-        # get best parameters with optuna
-        best_params = optimize(
-            modelname,
-#                args['modelname'],
-            args['task'],
-            train_X, train_y
-        )
-        # retrain and get preds
-        pred_array, train_metric = retrain(
-            modelname,
-#                args['modelname'],
-            best_params,
-            args['task'],
-            data_splited,
-            test_X
-        )
+        if modelname.endswith('_keras'):
+            # retrain and get preds
+            pred_array, train_metric = train_keras(
+                modelname,
+                keras_params,
+                args['task'],
+                data_splited,
+                test_X
+            )
+
+        else:
+            # get best parameters with optuna
+            best_params = optimize(
+                modelname,
+                args['task'],
+                train_X, train_y
+            )
+            # retrain and get preds
+            pred_array, train_metric = retrain(
+                modelname,
+                best_params,
+                args['task'],
+                data_splited,
+                test_X
+            )
 
         if args['task'] == 'classification':
             test_pred = np.mean(pred_array, axis=0)
             train_metric = np.mean(train_metric, axis=0)
-        
+            
         test_preds.append(test_pred)
         train_metrics.append(train_metric)
 
-    
-    if len(test_pred) > 1:
-        test_pred = np.mean(test_preds, axis=0)
-        train_metric = np.mean(train_metrics, axis=0)
+    test_pred = np.mean(test_preds, axis=0)
+    train_metric = np.mean(train_metrics, axis=0)
 
     # submission
     submission_df = data_loader(args['submission_path'], format='csv')

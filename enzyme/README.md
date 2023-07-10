@@ -10,9 +10,14 @@
 1. rf_pure	- train:1.0000, public:0.5689
 1. extra_pure	- train:0.5586, public:0.5526
 1. mlp_fe	- train:0.5692, public:0.5747
-1. rf_fe	- train:x.xxxx, public:x.xxxx
+
+# best public scores
+1. xgboostmlp	- train:0.985,	public:0.5975 # smote, 10 fold
+2. xgboostmlp	- train:0.985,	public:0.5965
 
 
 # TODO
-1. ensemble with library mlp 10
-2. augmentation ! oversampling!
+
+아래 두 방법은 실제로 성능을 올리는 데에 효과가 있었음
+1. ensemble with library mlp 10 - OK
+2. augmentation ! oversampling! - OK
