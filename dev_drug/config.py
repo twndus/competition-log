@@ -1,6 +1,6 @@
 import os
 
-data_dir='/home/jylee/datasets/kaggle/playground-series-s3e18'
+data_dir='data'
 # args
 args = {
     'train_path': os.path.join(data_dir, 'train.csv'),
@@ -11,7 +11,7 @@ args = {
     'modelname': 'mlp_keras',
     'metric': 'auc',
     #'xgboost' #'mlp_keras' #'gbm'#'mlp' #'rf' #'svc' #'logistic' #'knn'
-    'dataname': 'enzyme',
+    'dataname': 'drug',
     'multi-label': True,
     'oversampling': True,
     'epochs': 20,
